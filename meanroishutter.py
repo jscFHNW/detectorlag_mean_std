@@ -4,7 +4,6 @@ import os
 import numpy as np
 import time
 import tifffile
-from PIL import Image
 from scipy.ndimage import gaussian_filter
 
 import xml.etree.ElementTree as xml
@@ -13,11 +12,11 @@ import xml.etree.ElementTree as xml
 # Threshold to define ROI
 threshold = 0
 
-# file prefix to import/filter images located in source_dir
+# file prefix to import/filter images located in image_dir
 img_prefix = ""
 
 # Directories containing the images to be parsed
-source_dir = ""
+image_dir = ""
 
 start = time.time()
 
@@ -39,15 +38,15 @@ def main():
 ############
 def load_images():
     
-    all_files = os.listdir(source_dir)
+    all_files = os.listdir(image_dir)
 
-    img_files += list(filter(lambda x: x.startswith(img_prefix), all_files))
+    img_files = list(filter(lambda x: x.startswith(img_prefix), all_files))
 
     images = []
 
     # copy DC images
     for file in img_files :
-        source = os.path.join(source_dir, file)
+        source = os.path.join(image_dir, file)
 
         # load image
         images.append(np.array(tifffile.imread(source)))
@@ -92,12 +91,8 @@ def get_max_col(img: np.array) -> np.array:
 
 def check_config():
     
-    if (is_invalid_path(source_dir)):
-        print("NO OR INVALID SOURCE DIR SPECIFIED!")
-        quit()
-
-    if (is_invalid_path(dest_dir)):
-        print("NO OR INVALID DESTINATION DIR SPECIFIED!")        
+    if (is_invalid_path(image_dir)):
+        print(f"Image directory '{image_dir}' does not exists")
         quit()
 
 def load_config(config_path = ""):
@@ -114,26 +109,27 @@ def load_config(config_path = ""):
         
     root = tree.getroot()
 
-    global source_dir
-    source_dir = load_property(root, "sourceDir")
-
-    global dest_dir
-    dest_dir = load_property(root, "destDir")
+    global image_dir
+    image_dir = load_property(root, "imageDir")
 
     global img_prefix
     img_prefix = load_property(root, "imagePrefix")
 
-    global threshold
-    threshold = load_property(root, "threshold")
+    try:        
+        global threshold
+        threshold = load_property(root, "threshold")
+    except:
+        print(f"Cannot convert threshold '{threshold}' to a number! Ensure it is a 16 bit unsigned integer!")
+        quit()
     
     check_config()
 
 def load_property(xmlRoot, key):
     try:        
-        
-        return xmlRoot.get("sourceDir")
+        prop = xmlRoot.findall(f'.//{key}')
+        return prop[0].text
     except:
-        print("Cannot deserialize 'sourceDir' from config! Ensure the property exists!")
+        print(f"Cannot deserialize '{key}' from config! Ensure the property exists!")
         quit()
 
 def is_invalid_path(path):

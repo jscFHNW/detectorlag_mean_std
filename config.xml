@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <config>
-    <sourceDir></sourceDir>
-    <destDir></destDir>
-    <filemask></filemask>
-    <threshold></threshold>
+    <imageDir>C:\Quinx</imageDir>
+    <imagePrefix>ct_</imagePrefix>
+    <threshold>1123</threshold>
 </config>
 
